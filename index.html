@@ -726,11 +726,14 @@ document.getElementById("content").addEventListener("click", e => {
     if (hint) hint.textContent = origHint;
   };
 
+  const id = (btn.dataset.secId + "-" + label).toLowerCase().replace(/[^a-z0-9]+/g,"-").slice(0,60);
   const tracked = CONFIG.TRACKER_BASE + "?go=1"
-    + "&url="   + encodeURIComponent(url)
-    + "&label=" + encodeURIComponent(label)
-    + "&tags="  + encodeURIComponent(tags)
-    + "&u="     + encodeURIComponent(currentUser ? currentUser.email : "");
+    + "&id="      + encodeURIComponent(id)
+    + "&url="     + encodeURIComponent(url)
+    + "&label="   + encodeURIComponent(label)
+    + "&group_id="+ encodeURIComponent(btn.dataset.secId || "")
+    + "&tags="    + encodeURIComponent(tags)
+    + "&u="       + encodeURIComponent(currentUser ? currentUser.email : "");
 
   if (extern) {
     restore();
