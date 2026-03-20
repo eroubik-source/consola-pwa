@@ -1,5 +1,5 @@
 /* sw.js — Consola Maestra PWA Service Worker */
-const CACHE = "consola-v1";
+const CACHE = "consola-v2";
 const PRECACHE = ["./", "./index.html", "./manifest.json"];
 
 self.addEventListener("install", e => {
