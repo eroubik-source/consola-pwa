@@ -716,19 +716,11 @@ document.getElementById("content").addEventListener("click", e => {
   const label  = btn.dataset.label;
   const tags   = btn.dataset.tags;
   const extern = btn.dataset.extern === "1";
-  const hint   = btn.querySelector(".link-hint");
-  const origHint = hint ? hint.textContent : "";
 
-  btn.classList.add("loading");
-  if (hint) hint.textContent = "cargando…";
+  const id = (btn.dataset.secId + "-" + label).toLowerCase()
+    .replace(/[^a-z0-9]+/g,"-").slice(0,60);
 
-  const restore = () => {
-    btn.classList.remove("loading");
-    if (hint) hint.textContent = origHint;
-  };
-
-  const id = (btn.dataset.secId + "-" + label).toLowerCase().replace(/[^a-z0-9]+/g,"-").slice(0,60);
-  const tracked = CONFIG.TRACKER_BASE + "?go=1"
+  const tracked = CONFIG.TRACKER_BASE + "?go=1&beacon=1"
     + "&id="      + encodeURIComponent(id)
     + "&url="     + encodeURIComponent(url)
     + "&label="   + encodeURIComponent(label)
@@ -736,11 +728,16 @@ document.getElementById("content").addEventListener("click", e => {
     + "&tags="    + encodeURIComponent(tags)
     + "&u="       + encodeURIComponent(currentUser ? currentUser.email : "");
 
+  // Log fire-and-forget: registra el click sin bloquear ni condicionar la navegación
+  try {
+    fetch(tracked, { mode: "no-cors", keepalive: true });
+  } catch(err) {}
+
+  // Navegación directa dentro del gesto del usuario → Safari no bloquea popups
   if (extern) {
-    restore();
-    window.open(tracked, "_blank", "noopener");
+    window.open(url, "_blank", "noopener");
   } else {
-    window.location.href = tracked;
+    window.location.href = url;
   }
 });
 
