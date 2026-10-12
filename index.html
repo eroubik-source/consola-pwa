@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Consola Equipo</title>
+  <title>Consola Maestra</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -160,6 +160,49 @@
 
     .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── INSTALAR APP ── */
+    .install-bar {
+      position: fixed; z-index: 50;
+      left: calc(var(--sal) + 12px); right: calc(var(--sar) + 12px);
+      bottom: calc(var(--sab) + 12px);
+      background: var(--card); color: var(--text);
+      border-radius: var(--radius); box-shadow: 0 8px 30px rgba(0,0,0,0.22);
+      padding: 12px 12px 12px 14px;
+      display: none; align-items: center; gap: 12px;
+      max-width: 520px; margin: 0 auto;
+    }
+    .install-bar.show { display: flex; }
+    .install-bar img { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; }
+    .install-bar .ib-text { flex: 1; min-width: 0; }
+    .install-bar .ib-title { font-weight: 800; font-size: 14px; }
+    .install-bar .ib-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .install-bar .ib-btn {
+      background: var(--accent); color: #fff; border: none; border-radius: 10px;
+      padding: 10px 14px; font-size: 14px; font-weight: 700; cursor: pointer; min-height: 40px; flex-shrink: 0;
+    }
+    .install-bar .ib-close { background: none; border: none; color: #9aa0a6; font-size: 18px; cursor: pointer; padding: 4px 2px; flex-shrink: 0; }
+
+    .ios-sheet-bg {
+      position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,0.45);
+      display: none; align-items: flex-end; justify-content: center;
+    }
+    .ios-sheet-bg.show { display: flex; }
+    .ios-sheet {
+      background: var(--card); width: 100%; max-width: 520px;
+      border-radius: 20px 20px 0 0;
+      padding: 20px 20px calc(var(--sab) + 20px);
+    }
+    .ios-sheet h2 { margin: 0 0 4px; font-size: 18px; }
+    .ios-sheet .ios-lead { margin: 0 0 16px; font-size: 13px; color: var(--muted); }
+    .ios-step { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid rgba(0,0,0,0.06); font-size: 15px; }
+    .ios-step .n { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .ios-step svg { vertical-align: -4px; }
+    .ios-note { margin: 12px 0 0; font-size: 12.5px; color: var(--muted); }
+    .ios-actions { display: flex; gap: 8px; margin-top: 16px; }
+    .ios-actions button { flex: 1; min-height: 44px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .ios-copy { background: var(--card); color: var(--accent); border: 1.5px solid var(--accent); }
+    .ios-ok { background: var(--accent); color: #fff; border: none; }
   </style>
 </head>
 <body>
@@ -180,7 +223,7 @@
     </svg>
     Ingresar con Google
   </button>
-  <div id="auth-error">❌ No tienes acceso autorizado. Usa tu cuenta @rutacapital.cl o @ircinmobiliaria.cl</div>
+  <div id="auth-error">❌ Este correo no tiene acceso a la consola.</div>
   <div id="auth-loading" style="display:none;"><div class="spinner"></div>&nbsp;Verificando acceso…</div>
 </div>
 
@@ -191,8 +234,8 @@
       <img src="./logo-irc.png" alt="IRC" />
     </div>
     <div class="topbar-title">
-      <h1>CONSOLA MAESTRA</h1>
-      <p>RUTA Capital + IRC Inmobiliaria</p>
+      <h1 id="app-title">CONSOLA MAESTRA</h1>
+      <p id="app-subtitle">RUTA Capital + IRC Inmobiliaria</p>
     </div>
     <div class="topbar-user">
       <img class="user-avatar" id="user-avatar" src="" alt="usuario" />
@@ -209,8 +252,6 @@
     </div>
     <div class="filters-row" id="filters">
       <div class="pill active" data-filter="ALL">Todo</div>
-      <div class="pill" data-filter="IRC">IRC</div>
-      <div class="pill" data-filter="EXTERNOS">Externos</div>
     </div>
   </div>
   <div class="meta-row"><span class="meta" id="meta">Mostrando 0</span></div>
@@ -219,6 +260,34 @@
     <div class="empty-state" id="empty-state">
       <div class="icon">🔍</div>
       <p>Sin resultados para esta búsqueda</p>
+    </div>
+  </div>
+</div>
+
+<!-- INSTALAR APP -->
+<div class="install-bar" id="install-bar" role="dialog" aria-label="Instalar app">
+  <img src="./icon-192.png" alt="" />
+  <div class="ib-text">
+    <div class="ib-title" id="ib-title">Instala la consola</div>
+    <div class="ib-sub" id="ib-sub">Queda como app en tu pantalla de inicio</div>
+  </div>
+  <button class="ib-btn" id="ib-btn" type="button">Instalar</button>
+  <button class="ib-close" id="ib-close" type="button" aria-label="Cerrar">✕</button>
+</div>
+
+<div class="ios-sheet-bg" id="ios-sheet">
+  <div class="ios-sheet" role="dialog" aria-label="Cómo instalar en iPhone">
+    <h2>Instalar en iPhone</h2>
+    <p class="ios-lead">Son tres toques y queda como app, con su ícono.</p>
+    <div class="ios-step"><span class="n">1</span><span>Toca
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f6fa6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+      <b>Compartir</b> en la barra de Safari</span></div>
+    <div class="ios-step"><span class="n">2</span><span>Elige <b>Agregar a pantalla de inicio</b></span></div>
+    <div class="ios-step"><span class="n">3</span><span>Toca <b>Agregar</b> arriba a la derecha</span></div>
+    <p class="ios-note">¿No ves el botón Compartir o la opción? Estás dentro de otra app (WhatsApp, correo). Copia el link y ábrelo en Safari.</p>
+    <div class="ios-actions">
+      <button class="ios-copy" id="ios-copy" type="button">Copiar link</button>
+      <button class="ios-ok" id="ios-ok" type="button">Entendido</button>
     </div>
   </div>
 </div>
@@ -234,13 +303,14 @@
 const CONFIG = {
   GOOGLE_CLIENT_ID: "154544420704-oibq8s4k42898m5rb93e8ccoenv19m1e.apps.googleusercontent.com",
   LINKS_API: "https://script.google.com/macros/s/AKfycbzO-Ft1Ca7lTHr7BJaOkTKLS8S5tkeh3f57ECS6vFNQbq8xYZu0IAKe_NoiIGQWwPma/exec",  // ← URL /exec del deployment de ConsolaLinks.gs
-  CONSOLA: "equipo",
-  CACHE_KEY: "consolaequipo_v2",
+  APP: "pwa",                      // app compartida: la consola la decide el correo
+  CONSOLA: "",                    // vacío = ConsolaLinks entrega la consola del correo
+  CACHE_KEY: "consolapwa_v3",     // v3: cache con huella de catálogo + título y filtros
   CACHE_DIAS: 30,
 };
 
 /* ── ESTADO (se llena post-autenticación) ── */
-let STATE = { user: null, sections: [], ntfy: null, tracker: null };
+let STATE = { user: null, sections: [], ntfy: null, tracker: null, consola: "", title: "", subtitle: "", filters: null };
 let pendingProfile = null; // nombre/foto capturados durante el login
 
 /* ══════════════ SESIÓN Y AUTENTICACIÓN ══════════════ */
@@ -250,12 +320,42 @@ function restoreSession() {
     const saved = JSON.parse(localStorage.getItem(CONFIG.CACHE_KEY) || "null");
     if (saved && saved.user && saved.sections && saved.sections.length
         && (Date.now() - (saved.ts || 0)) < CONFIG.CACHE_DIAS * 864e5) {
-      STATE = { user: saved.user, sections: saved.sections, ntfy: saved.ntfy || null, tracker: saved.tracker || null };
+      STATE = { user: saved.user, sections: saved.sections, ntfy: saved.ntfy || null, tracker: saved.tracker || null, v: saved.v || null,
+                consola: saved.consola || "", title: saved.title || "", subtitle: saved.subtitle || "", filters: saved.filters || null };
       showApp();
+      verificarVersion(saved.v || null);   // en segundo plano: ¿cambió el catálogo?
       return true;
     }
   } catch(e) {}
   return false;
+}
+
+/** Pregunta a ConsolaLinks la huella del catálogo. Si no calza con la de la
+    cache, la bota y pide login de nuevo (intenta hacerlo solo con Google). */
+async function verificarVersion(vLocal) {
+  try {
+    const r = await fetch(CONFIG.LINKS_API + "?v=" + Date.now(), { cache: "no-store" });
+    const data = await r.json();
+    if (!data.v || data.v === vLocal) return;          // al día (o servidor antiguo)
+    localStorage.removeItem(CONFIG.CACHE_KEY);
+    STATE = { user: null, sections: [], ntfy: null, tracker: null, v: null, consola: "", title: "", subtitle: "", filters: null };
+    showAuth();
+    const errEl = document.getElementById("auth-error");
+    errEl.style.display = "block";
+    errEl.textContent = "🔄 Hay links nuevos. Entra de nuevo para cargarlos.";
+    loginSilencioso();
+  } catch(e) {}   // sin conexión: se queda con la cache
+}
+
+/** Intenta el login de Google sin clic (si ya autorizó antes en este equipo). */
+function loginSilencioso(intentos) {
+  intentos = intentos || 0;
+  if (typeof google === "undefined" || !google.accounts) {
+    if (intentos < 20) setTimeout(() => loginSilencioso(intentos + 1), 250);
+    return;
+  }
+  google.accounts.id.initialize({ client_id: CONFIG.GOOGLE_CLIENT_ID, callback: window.handleGoogleSignIn, ux_mode: "popup", auto_select: true });
+  google.accounts.id.prompt();   // si Google no lo muestra, queda el botón
 }
 
 /** Envía el token a ConsolaLinks; si el servidor lo valida, recibe los links. */
@@ -283,8 +383,14 @@ async function autenticar(token) {
     STATE.sections = data.sections || [];
     STATE.ntfy     = data.ntfy || null;
     STATE.tracker  = data.tracker || null;
+    STATE.v        = data.v || null;
+    STATE.consola  = String(data.consola || "").replace(/^consola-/, "");
+    STATE.title    = data.title || "";
+    STATE.subtitle = data.subtitle || "";
+    STATE.filters  = data.filters || null;
     localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({
-      user: STATE.user, sections: STATE.sections, ntfy: STATE.ntfy, tracker: STATE.tracker, ts: Date.now()
+      user: STATE.user, sections: STATE.sections, ntfy: STATE.ntfy, tracker: STATE.tracker, v: STATE.v,
+      consola: STATE.consola, title: STATE.title, subtitle: STATE.subtitle, filters: STATE.filters, ts: Date.now()
     }));
     loadEl.style.display = "none";
     showApp();
@@ -301,6 +407,8 @@ function showApp() {
   if (STATE.user && STATE.user.picture) {
     document.getElementById("user-avatar").src = STATE.user.picture;
   }
+  pintarEncabezado();
+  pintarFiltros();
   render();
   avisar("open");
 }
@@ -332,7 +440,7 @@ document.getElementById("btn-login").addEventListener("click", function() {
 
 document.getElementById("btn-logout").addEventListener("click", function() {
   localStorage.removeItem(CONFIG.CACHE_KEY);
-  STATE = { user: null, sections: [], ntfy: null, tracker: null };
+  STATE = { user: null, sections: [], ntfy: null, tracker: null, consola: "", title: "", subtitle: "", filters: null };
   if (typeof google !== "undefined" && google.accounts) google.accounts.id.disableAutoSelect();
   showAuth();
 });
@@ -360,7 +468,7 @@ function avisar(ev, label, secId, tags) {
   // 1) ACCESS_LOG en el tracker
   if (STATE.tracker) {
     try {
-      let q = STATE.tracker + "?go=1&beacon=1&consola=" + CONFIG.CONSOLA + "&ev=" + ev
+      let q = STATE.tracker + "?go=1&beacon=1&consola=" + encodeURIComponent(STATE.consola || CONFIG.APP) + "&ev=" + ev
         + "&u=" + encodeURIComponent(email);
       if (label) q += "&label=" + encodeURIComponent(label) + "&group_id=" + encodeURIComponent(secId||"") + "&tags=" + encodeURIComponent(tags||"");
       fetch(q, { mode: "no-cors", keepalive: true });
@@ -370,7 +478,8 @@ function avisar(ev, label, secId, tags) {
   if (STATE.ntfy) {
     try {
       const hora = new Date().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" });
-      const titulo = ev === "open" ? "Consola Equipo · Ingreso" : "Consola Equipo · " + (label || "Click");
+      const nombre = "Consola " + (STATE.consola || "Maestra");
+      const titulo = ev === "open" ? nombre + " · Ingreso" : nombre + " · " + (label || "Click");
       const cuerpo = ev === "open" ? (email + " abrió la consola · " + hora) : (email + " · " + hora);
       const tag    = ev === "open" ? "unlock" : "large_blue_circle";
       fetch(STATE.ntfy + "?title=" + encodeURIComponent(titulo) + "&tags=" + tag,
@@ -381,6 +490,27 @@ function avisar(ev, label, secId, tags) {
 
 /* ══════════════ RENDER ══════════════ */
 let activeFilter = "ALL";
+
+/** Título y subtítulo de la consola que le tocó al correo (vienen de ConsolaLinks). */
+function pintarEncabezado() {
+  var t = STATE.title || "CONSOLA MAESTRA";
+  var s = (STATE.subtitle || "RUTA Capital + IRC Inmobiliaria").split(" · ")[0];
+  document.getElementById("app-title").textContent = t;
+  document.getElementById("app-subtitle").textContent = s;
+}
+
+/** Filtros según la consola (ej. Steve y Equipo no tienen RUTA). */
+var NOMBRES_FILTRO = { ALL: "Todo", RUTA: "RUTA", IRC: "IRC", EXTERNOS: "Externos" };
+function pintarFiltros() {
+  var lista = (STATE.filters && STATE.filters.length) ? STATE.filters : ["ALL"];
+  if (lista.indexOf(activeFilter) < 0) activeFilter = "ALL";
+  var html = "";
+  lista.forEach(function (f) {
+    html += '<div class="pill' + (f === activeFilter ? " active" : "") + '" data-filter="' + escapeHtml(f) + '">'
+         + escapeHtml(NOMBRES_FILTRO[f] || f) + "</div>";
+  });
+  document.getElementById("filters").innerHTML = html;
+}
 
 function normalize(s) { return String(s||"").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu,""); }
 function escapeHtml(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -475,6 +605,106 @@ document.getElementById("content").addEventListener("click", e => {
     window.location.href = url;
   }
 });
+
+/* ══════════════ INSTALAR APP ══════════════
+   - Android/Chrome: botón "Instalar" que abre el diálogo nativo (un toque).
+   - iPhone: Apple no deja instalar desde código; se muestran los pasos.
+   - Dentro de WhatsApp u otra app en Android: botón para abrir en Chrome.
+   - Si ya está instalada (abierta como app) no aparece nada.
+   - Link con ?instalar muestra la barra aunque la hayan cerrado antes.
+*/
+(function () {
+  var OMITIR_KEY = "pwa_omitir_" + CONFIG.APP;
+  var OMITIR_DIAS = 7;
+  var ua = navigator.userAgent || "";
+  var standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+  if (standalone) return;
+
+  var esIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var esAndroid = /Android/i.test(ua);
+  var enOtraAppAndroid = esAndroid && (/; wv\)/.test(ua) || /FBAN|FBAV|Instagram|Line\/|WhatsApp|GSA\//i.test(ua));
+  var forzar = /[?&]instalar\b/.test(location.search);
+
+  var $bar = document.getElementById("install-bar");
+  var $title = document.getElementById("ib-title");
+  var $sub = document.getElementById("ib-sub");
+  var $btn = document.getElementById("ib-btn");
+  var $sheet = document.getElementById("ios-sheet");
+  var diferido = null;
+  var modo = "";
+
+  function omitido() {
+    if (forzar) return false;
+    try {
+      var t = Number(localStorage.getItem(OMITIR_KEY) || "0");
+      return t && (Date.now() - t) < OMITIR_DIAS * 864e5;
+    } catch (e) { return false; }
+  }
+  function mostrar(m, titulo, sub, boton) {
+    if (omitido()) return;
+    modo = m;
+    $title.textContent = titulo;
+    $sub.textContent = sub;
+    $btn.textContent = boton;
+    $bar.classList.add("show");
+  }
+  function ocultar() { $bar.classList.remove("show"); }
+
+  document.getElementById("ib-close").addEventListener("click", function () {
+    try { localStorage.setItem(OMITIR_KEY, String(Date.now())); } catch (e) {}
+    ocultar();
+  });
+
+  $btn.addEventListener("click", function () {
+    if (modo === "android" && diferido) {
+      diferido.prompt();
+      diferido.userChoice.then(function (r) {
+        if (r && r.outcome === "accepted") ocultar();
+        diferido = null;
+      });
+    } else if (modo === "ios") {
+      $sheet.classList.add("show");
+    } else if (modo === "chrome") {
+      var dest = location.host + location.pathname + "?instalar=1";
+      location.href = "intent://" + dest + "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" + encodeURIComponent("https://" + dest) + ";end";
+    } else if (modo === "menu") {
+      alert("En Chrome toca el menú ⋮ (arriba a la derecha) y elige \"Instalar app\" o \"Agregar a pantalla principal\".");
+    }
+  });
+
+  function cerrarSheet() { $sheet.classList.remove("show"); }
+  document.getElementById("ios-ok").addEventListener("click", cerrarSheet);
+  $sheet.addEventListener("click", function (e) { if (e.target === $sheet) cerrarSheet(); });
+  document.getElementById("ios-copy").addEventListener("click", function () {
+    var link = location.origin + location.pathname;
+    var $b = this;
+    function listo() { $b.textContent = "Link copiado"; setTimeout(function () { $b.textContent = "Copiar link"; }, 2000); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(listo, function () { prompt("Copia este link:", link); });
+    } else { prompt("Copia este link:", link); }
+  });
+
+  // Android / Chrome de escritorio: Chrome avisa cuando la app es instalable
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    diferido = e;
+    mostrar("android", "Instala la consola", "Queda como app en tu pantalla de inicio", "Instalar");
+  });
+  window.addEventListener("appinstalled", function () { diferido = null; ocultar(); });
+
+  if (esIOS) {
+    mostrar("ios", "Instala la consola", "Queda como app en tu iPhone", "Cómo");
+  } else if (enOtraAppAndroid) {
+    mostrar("chrome", "Ábrela en Chrome", "Desde aquí no se puede instalar", "Abrir");
+  } else if (esAndroid) {
+    // Si Chrome no ofreció instalar en unos segundos, se explica el menú
+    setTimeout(function () {
+      if (!diferido && !$bar.classList.contains("show")) {
+        mostrar("menu", "Instala la consola", "Menú ⋮ → Instalar app", "Cómo");
+      }
+    }, 4000);
+  }
+})();
 
 /* ── SERVICE WORKER ── */
 if ("serviceWorker" in navigator) {
